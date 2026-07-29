@@ -589,15 +589,22 @@
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                         <div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-1"><i class="fa-solid fa-arrow-right-arrow-left text-indigo-500 mr-2"></i> Visualising Bertoin's Transformation</h3>
-                            <p class="text-base text-slate-500">Side-by-side components vs time demonstrating the equivalence of the future infimum and the running supremum.</p>
+                            <h3 class="text-xl font-bold text-slate-800 mb-1"><i class="fa-solid fa-arrow-right-arrow-left text-indigo-500 mr-2"></i> Visualizing Bertoin's Transformation</h3>
+                            <p class="text-sm text-slate-500">Side-by-side components vs time demonstrating the equivalence of the future infimum and the running supremum.</p>
                         </div>
                         <button id="btn-regen-bertoin" class="mt-4 md:mt-0 px-3 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 transition font-medium text-xs focus:outline-none whitespace-nowrap">
                             <i class="fa-solid fa-rotate mr-1"></i> New Excursion Reversal
                         </button>
                     </div>
-                    <div class="chart-container" style="background-color: #fafafa; min-height: 350px;">
-                        <canvas id="bertoinChart"></canvas>
+                    <div class="flex flex-col gap-4">
+                        <div class="chart-container" style="background-color: #fafafa; min-height: 350px;">
+                            <canvas id="bertoinChart"></canvas>
+                            <div class="absolute bottom-2 right-2 text-xs text-slate-500 font-bold bg-white/80 px-2 py-1 rounded shadow-sm">1D: Time vs X</div>
+                        </div>
+                        <div class="chart-container" style="background-color: #fafafa; min-height: 350px;">
+                            <canvas id="bertoin2DChart"></canvas>
+                            <div class="absolute bottom-2 right-2 text-xs text-slate-500 font-bold bg-white/80 px-2 py-1 rounded shadow-sm">2D: X vs Y</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -750,6 +757,7 @@
         let hullChartInstance = null;
         let subsampleChartInstances = {};
         let bertoinChartInstance = null;
+        let bertoin2DChartInstance = null;
 
         function initCharts() {
             const ctxHull = document.getElementById('hullChart').getContext('2d');
@@ -811,14 +819,31 @@
                 type: 'scatter',
                 data: {
                     datasets: [
-                        { label: 'Post-infimum', data: [], backgroundColor: 'rgba(148, 163, 184, 0.5)', borderColor: 'rgba(148, 163, 184, 0.5)', pointRadius: 0.75, showLine: true, borderWidth: 0.75, order: 3 },
-                        { label: 'Reversed Process', data: [], backgroundColor: 'rgba(14, 165, 233, 0.8)', borderColor: 'rgba(14, 165, 233, 0.8)', pointRadius: 0.75, showLine: true, borderWidth: 0.75, order: 2 },
-                        { label: 'Future Infimums', data: [], backgroundColor: 'rgba(225, 29, 72, 1)', borderColor: 'rgba(225, 29, 72, 1)', pointRadius: 0.75, showLine: true, borderWidth: 0.75, stepped: 'before', order: 1 }
+                        { label: 'Post-infimum', data: [], backgroundColor: 'rgba(148, 163, 184, 0.5)', borderColor: 'rgba(148, 163, 184, 0.5)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 3 },
+                        { label: 'Reversed Process', data: [], backgroundColor: 'rgba(14, 165, 233, 0.8)', borderColor: 'rgba(14, 165, 233, 0.8)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 2 },
+                        { label: 'Future Infimums', data: [], backgroundColor: 'rgba(225, 29, 72, 1)', borderColor: 'rgba(225, 29, 72, 1)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 1 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, animation: false,
                     plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' } },
+                    scales: { x: { display: false }, y: { display: false } }
+                }
+            });
+
+            const ctxBertoin2D = document.getElementById('bertoin2DChart').getContext('2d');
+            bertoin2DChartInstance = new Chart(ctxBertoin2D, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        { label: 'Post-infimum', data: [], backgroundColor: 'rgba(148, 163, 184, 0.5)', borderColor: 'rgba(148, 163, 184, 0.5)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 3 },
+                        { label: 'Reversed Process', data: [], backgroundColor: 'rgba(14, 165, 233, 0.8)', borderColor: 'rgba(14, 165, 233, 0.8)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 2 },
+                        { label: 'Extremal Process', data: [], backgroundColor: 'rgba(225, 29, 72, 1)', borderColor: 'rgba(225, 29, 72, 1)', pointRadius: 0.375, showLine: true, borderWidth: 0.375, order: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: { x: { display: false }, y: { display: false } }
                 }
             });
@@ -1006,51 +1031,67 @@
         }
 
         function updateBertoinData() {
-            let path = [0];
             let n = 10000;
+            let postX = [0], postY = [0];
             for(let i=0; i<n; i++) {
-                let r = Math.pow(Math.random(), -0.7) * (Math.random() > 0.48 ? 1 : -1) + 0.05; 
-                path.push(path[i] + r);
+                let rX = Math.pow(Math.random(), -0.7) * (Math.random() > 0.48 ? 1 : -1) + 0.05; 
+                let rY = Math.pow(Math.random(), -0.7) * (Math.random() > 0.5 ? 1 : -1); 
+                postX.push(postX[i] + rX);
+                postY.push(postY[i] + rY);
             }
             
-            let minVal = Infinity, minIdx = 0;
-            for(let i=0; i<path.length; i++) {
-                if(path[i] < minVal) { minVal = path[i]; minIdx = i; }
+            let minValX = Infinity, minIdxX = 0;
+            for(let i=0; i<postX.length; i++) {
+                if(postX[i] < minValX) { minValX = postX[i]; minIdxX = i; }
             }
             
-            let postX = path.slice(minIdx).map(v => v - minVal);
+            let pX = postX.slice(minIdxX).map(v => v - minValX);
+            let pY = postY.slice(minIdxX).map(v => v - postY[minIdxX]);
             
-            let futureInfIdxs = [];
-            let cur = 0;
-            while(cur < postX.length) {
-                let mVal = Infinity, mIdx = cur;
-                for(let i=cur; i<postX.length; i++) {
-                    if(postX[i] < mVal) { mVal = postX[i]; mIdx = i; }
+            let fut_idx = new Int32Array(pX.length);
+            let cur_min = Infinity, cur_idx = pX.length - 1;
+            for(let i = pX.length - 1; i >= 0; i--) {
+                if(pX[i] <= cur_min) { cur_min = pX[i]; cur_idx = i; }
+                fut_idx[i] = cur_idx;
+            }
+            
+            let unique_fut_times = Array.from(new Set(fut_idx));
+            if(unique_fut_times[0] !== 0) unique_fut_times.unshift(0);
+            if(unique_fut_times[unique_fut_times.length-1] !== pX.length - 1) unique_fut_times.push(pX.length - 1);
+            
+            let rx = new Float64Array(pX.length);
+            let ry = new Float64Array(pX.length);
+            
+            for(let i=1; i<unique_fut_times.length; i++) {
+                let start = unique_fut_times[i-1];
+                let end = unique_fut_times[i];
+                let sumX = pX[start] + pX[end];
+                let sumY = pY[start] + pY[end];
+                
+                for(let j=start; j<=end; j++) {
+                    let rev_j = end - (j - start);
+                    rx[j] = sumX - pX[rev_j];
+                    ry[j] = sumY - pY[rev_j];
                 }
-                futureInfIdxs.push(mIdx);
-                if(mIdx === cur && cur === postX.length - 1) break;
-                cur = mIdx + 1;
             }
             
-            let rx = [...postX];
-            for(let i=1; i<futureInfIdxs.length; i++) {
-                let start = futureInfIdxs[i-1];
-                let end = futureInfIdxs[i];
-                let sum = postX[start] + postX[end];
-                let segment = postX.slice(start, end+1).reverse();
-                for(let j=0; j<segment.length; j++) {
-                    rx[start+j] = sum - segment[j];
-                }
-            }
-            
-            let t_post = postX.map((v, i) => ({x: i, y: v}));
-            let t_rx = rx.map((v, i) => ({x: i, y: v}));
-            let t_fut = futureInfIdxs.map(i => ({x: i, y: postX[i]}));
+            let t_post = pX.map((v, i) => ({x: i, y: v}));
+            let t_rx = Array.from(rx).map((v, i) => ({x: i, y: v}));
+            let t_fut = Array.from(fut_idx).map((idx, i) => ({x: i, y: pX[idx]}));
             
             bertoinChartInstance.data.datasets[0].data = t_post;
             bertoinChartInstance.data.datasets[1].data = t_rx;
             bertoinChartInstance.data.datasets[2].data = t_fut;
             bertoinChartInstance.update();
+
+            let xy_post = pX.map((v, i) => ({x: v, y: pY[i]}));
+            let xy_rx = Array.from(rx).map((v, i) => ({x: v, y: ry[i]}));
+            let xy_fut = Array.from(fut_idx).map((idx) => ({x: pX[idx], y: pY[idx]}));
+            
+            bertoin2DChartInstance.data.datasets[0].data = xy_post;
+            bertoin2DChartInstance.data.datasets[1].data = xy_rx;
+            bertoin2DChartInstance.data.datasets[2].data = xy_fut;
+            bertoin2DChartInstance.update();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1331,7 +1372,7 @@
         }
 
         function renderGeneral3DHull() {
-            let n = 20000;
+            let n = 80000;
             // Use TypedArrays for massive performance boost and memory safety
             let S = new Float64Array(n + 1);
             let X1 = new Float64Array(n + 1);
@@ -1343,13 +1384,16 @@
             let minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
             
             for(let i=0; i<n; i++) {
-                let rS = Math.pow(Math.random(), -1.0/alpha) * 0.02;
-                S[i+1] = S[i] + rS;
+                let R = Math.pow(Math.random(), -1.0/alpha) * 0.05;
+                let theta = Math.random() * 2 * Math.PI;
+                let phi = Math.random() * Math.PI;
+                let dx = R * Math.sin(phi) * Math.cos(theta);
+                let dy = R * Math.sin(phi) * Math.sin(theta);
+                let dz = R * Math.cos(phi);
                 
-                let r1 = Math.pow(Math.random(), -1.0/alpha) * 0.05 * (Math.random() > 0.5 ? 1 : -1);
-                let r2 = Math.pow(Math.random(), -1.0/alpha) * 0.05 * (Math.random() > 0.5 ? 1 : -1);
-                X1[i+1] = X1[i] + r1;
-                X2[i+1] = X2[i] + r2;
+                S[i+1] = S[i] + dx;
+                X1[i+1] = X1[i] + dy;
+                X2[i+1] = X2[i] + dz;
 
                 if (S[i+1] < minX) minX = S[i+1]; if (S[i+1] > maxX) maxX = S[i+1];
                 if (X1[i+1] < minY) minY = X1[i+1]; if (X1[i+1] > maxY) maxY = X1[i+1];
@@ -1462,10 +1506,9 @@
                     name: 'Path X_t'
                 },
                 {
-                    // Render the hull strictly based on the extracted extreme points E
                     x: E.map(p=>p.x), y: E.map(p=>p.y), z: E.map(p=>p.z),
                     alphahull: 0,
-                    opacity: 0.15, // Made clearer and more transparent
+                    opacity: 0.15, 
                     color: '#0ea5e9',
                     type: 'mesh3d',
                     flatshading: true,
@@ -1475,7 +1518,7 @@
                 {
                     x: edge_x, y: edge_y, z: edge_z,
                     mode: 'lines',
-                    line: {color: '#000000', width: 1.5}, // Exact triangulated edges extracted perfectly
+                    line: {color: '#000000', width: 1.5}, 
                     type: 'scatter3d',
                     name: 'Hull Edges',
                     hoverinfo: 'none'
@@ -1485,14 +1528,14 @@
             Plotly.newPlot('plotly-general-3d-hull', traces, {
                 margin: {l:0, r:0, b:0, t:0},
                 scene: {
-                    xaxis: {title: 'S (Time-like)'}, yaxis: {title: 'X1'}, zaxis: {title: 'X2'},
+                    xaxis: {title: 'X'}, yaxis: {title: 'Y'}, zaxis: {title: 'Z'},
                     camera: {eye: {x: 1.5, y: 1.5, z: 1.2}}
                 },
                 showlegend: false
             }, {responsive: true});
         }
-
-        function drawGeoSep() {
+	
+	function drawGeoSep() {
             const t1x = parseFloat(document.getElementById('geo_t1x').value) || 0;
             const t1y = parseFloat(document.getElementById('geo_t1y').value) || 0;
             const t1z = parseFloat(document.getElementById('geo_t1z').value) || 0;
