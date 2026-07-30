@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         MathJax = {
@@ -129,6 +130,11 @@
             <a href="#methodology" class="nav-link block px-4 py-3 rounded-md hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium"><i class="fa-solid fa-compress w-6 text-rose-400"></i> The Subsampling Approach</a>
             <a href="#machinery" class="nav-link block px-4 py-3 rounded-md hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium"><i class="fa-solid fa-gears w-6 text-slate-400"></i> Fluctuation Machinery</a>
         </nav>
+
+        <div class="p-6 mt-auto hidden md:block border-t border-slate-800">
+            <p class="text-xs text-slate-400 mb-3 text-center">Scan for interactive version</p>
+            <div id="qrcode-sidebar" class="bg-white p-2 rounded-lg mx-auto w-fit"></div>
+        </div>
     </aside>
 
     <main class="flex-1 w-full max-w-5xl mx-auto p-6 md:p-10 lg:p-14 overflow-x-hidden">
@@ -696,9 +702,17 @@
                     <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>González Cázares, J., Kramer-Bang, S., & Mijatović, A. (2024).</b> Convex hulls of one-dimensional Lévy processes. <i>Annales de l’Institut Henri Poincaré (B) Probability and Statistics</i>, 60(4), 2352–2381.</span></li>
                     <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>Greenwood, P., & Pitman, J. (1980).</b> Fluctuation identities for Lévy processes and splitting at the maximum. <i>Advances in Applied Probability</i>, 12(4), 893-902.</span></li>
                     <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>Lévy, P. (1948).</b> <i>Processus stochastiques et mouvement brownien</i>. Gauthier-Villars, Paris.</span></li>
-		    <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>Shimura, M. (1985).</b> Excursions in a cone for two-dimensional Brownian motion. <i>Journal of Mathematics of Kyoto University</i>, 25(3), 433-443.</span></li>
-                    <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>Tamura, Y., & Tanaka, H. (2002).</b> On a fluctuation identity for multidimensional Lévy processes. <i>Tokyo Journal of Mathematics</i>, 25(2), 363-380.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-3"></i><span><b>Tamura, Y., & Tanaka, H. (2002).</b> On the joint distribution of the supremum and the terminal value of a multidimensional Lévy process. <i>Journal of the Mathematical Society of Japan</i>.</span></li>
                 </ul>
+            </div>
+
+            <div class="mt-12 p-8 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Access this presentation online</h3>
+                    <p class="text-slate-600 text-sm">Scan the QR code to open the interactive version of this presentation directly on your device, or visit:<br>
+                    <a href="https://jorgeignaciogc.github.io/CornerlessConvexHull/" class="text-indigo-600 hover:underline break-all font-medium mt-1 inline-block">https://jorgeignaciogc.github.io/CornerlessConvexHull/</a></p>
+                </div>
+                <div id="qrcode-footer" class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm shrink-0"></div>
             </div>
         </section>
     </main>
@@ -1106,6 +1120,25 @@
                 try { renderSingularBody(); } catch(e) { console.error(e); }
                 try { if (typeof renderGeneral3DHull === 'function') renderGeneral3DHull(); } catch(e) { console.error(e); }
                 try { drawGeoSep(); } catch(e) { console.error(e); }
+                
+                try {
+                    new QRCode(document.getElementById("qrcode-sidebar"), {
+                        text: "https://jorgeignaciogc.github.io/CornerlessConvexHull/",
+                        width: 128,
+                        height: 128,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                    new QRCode(document.getElementById("qrcode-footer"), {
+                        text: "https://jorgeignaciogc.github.io/CornerlessConvexHull/",
+                        width: 120,
+                        height: 120,
+                        colorDark : "#0f172a",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                } catch(e) { console.error("QR Code generation failed", e); }
             }, 300);
             
             window.addEventListener('resize', () => {
